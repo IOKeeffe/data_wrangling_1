@@ -64,9 +64,75 @@ litters =
 
 litters
 ```
+## tidy data
+```{r}
+analysis_df = 
+  tibble(
+    groups = c("treatment", "treatment", "placebo", "placebo"),
+    time = c("pre", "post", "pre", "post"),
+    mean_outcome = c(4.0, 8.0, 3.5, 4.6)
+  )
+analysis_df
+```
+## Let's untidy it for readability. knitr::kable is creating a table for our markdown output.
+```{r}
+analysis_df %>% 
+  pivot_wider(
+    names_from = time,
+    values_from = mean_outcome
+  ) %>% 
+  knitr::kable()
+```
+## Bind some rows
+
+first, import each lotr movie table
+```{r}
+fellowship_df = 
+  readxl::read_excel("data/LotR_Words.xlsx", range = "B3:D6") %>% 
+  mutate(movie = "fellowship")
+
+towers_df = 
+  readxl::read_excel("data/LotR_Words.xlsx", range = "F3:H6") %>% 
+  mutate(movie = "towers")
+
+return_df = 
+  readxl::read_excel("data/LotR_Words.xlsx", range = "J3:L6") %>% 
+  mutate(movie = "return")
+```
 
 ```{r}
 
-```
+lotr_df = 
+  bind_rows(fellowship_df, towers_df, return_df) %>% 
+  janitor::clean_names() %>% 
+  relocate(movie) %>% 
+  pivot_longer(
+    female:male,
+    names_to = "gender",
+    values_to = "words"
+  )
 
+
+lotr_df
+```
+## join FAS datasets
+```{r}
+pups_df = 
+  read_csv("data/FAS_pups.csv",
+           skip = 3,
+           na = c("", ".", "NA")
+  ) %>% 
+  janitor::clean_names()
+
+litters_df = 
+  read_csv(
+      "data/FAS_litters.csv", 
+      na = c("", "NA", ".")
+  ) %>% 
+  janitor::clean_names()
+
+fas_df = 
+  left_join(pups_df, litters_df, by = "litter_number")
+
+```
 
